@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http-auth-deployment
+  namespace: {{ namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: http-auth
+      branch: {{ git_branch }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: http-auth
+        branch: {{ git_branch }}
+    spec:
+      containers:
+        - name: http-auth-container
+          image: ruchira088/http-auth:{{ git_branch }}-{{ git_commit }}
+          envFrom:
+            - configMapRef:
+                name: http-auth-config-map
+            - secretRef:
+                name: http-auth-secrets
+          readinessProbe:
+            httpGet:
+              port: http4s-port
+              path: /health
+              httpHeaders:
+                - name: X-Correlation-ID
+                  value: k8s-readiness-probe
+          livenessProbe:
+            httpGet:
+              port: http4s-port
+              path: /health
+              httpHeaders:
+                - name: X-Correlation-ID
+                  value: k8s-liveness-probe
+          startupProbe:
+            periodSeconds: 5
+            failureThreshold: 5
+            httpGet:
+              port: http4s-port
+              path: /health
+              httpHeaders:
+                - name: X-Correlation-ID
+                  value: k8s-startup-probe
+          ports:
+            - name: http4s-port
+              containerPort: 8000

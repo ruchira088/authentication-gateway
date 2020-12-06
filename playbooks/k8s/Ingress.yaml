@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: http-auth-ingress
+  namespace: {{ namespace }}
+spec:
+  tls:
+    - secretName: http-auth-tls
+      hosts:
+        - {{ hostname }}
+  rules:
+    - host: {{ hostname }}
+      http:
+        paths:
+          - pathType: ImplementationSpecific
+            backend:
+              service:
+                name: http-auth-service
+                port:
+                  name: http4s-port
