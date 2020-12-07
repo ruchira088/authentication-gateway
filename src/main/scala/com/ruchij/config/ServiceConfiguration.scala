@@ -3,6 +3,7 @@ package com.ruchij.config
 import cats.ApplicativeError
 import com.ruchij.config.BuildInformation
 import com.ruchij.config.ConfigReaders.dateTimeConfigReader
+import ProxyConfiguration.uriConfigReader
 import com.ruchij.types.FunctionKTypes.eitherToF
 import pureconfig.ConfigObjectSource
 import pureconfig.error.ConfigReaderException

@@ -23,7 +23,9 @@ object Routes {
       Router(
         "/health" -> HealthRoutes[F](healthService),
         "/authenticate" -> AuthenticationRoutes[F](authenticationService)
-      ) <+> Authenticator[F](authenticationService)(ProxyRoutes(proxyService))
+      ) <+>
+        ProxyRoutes(proxyService)
+//        Authenticator[F](authenticationService)(ProxyRoutes(proxyService))
 
     ExceptionHandler {
       NotFoundHandler(routes)

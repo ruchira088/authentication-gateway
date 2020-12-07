@@ -1,30 +1,14 @@
 package com.ruchij.config
 
-import cats.implicits._
-import com.ruchij.config.ProxyConfiguration.RouteMapping
+import org.http4s.Uri
 import pureconfig.ConfigReader
-import pureconfig.error.{CannotConvert, FailureReason}
+import pureconfig.error.CannotConvert
 
-import scala.util.matching.Regex
-
-case class ProxyConfiguration(mappings: List[RouteMapping])
+case class ProxyConfiguration(destination: Uri)
 
 object ProxyConfiguration {
-  val Route: Regex = "(\\S+)\\s*->\\s*(\\S+)".r
-
-  case class RouteMapping(in: String, out: String)
-
-  implicit val routeMappingsConfigReader: ConfigReader[List[RouteMapping]] =
+  implicit val uriConfigReader: ConfigReader[Uri] =
     ConfigReader[String].emap { text =>
-      text
-        .split(",")
-        .map(_.trim)
-        .toList
-        .traverse[Either[FailureReason, *], RouteMapping] {
-          case Route(in, out) => Right(RouteMapping(in, out))
-
-          case input =>
-            Left(CannotConvert(input, classOf[RouteMapping].getSimpleName, s"Not valid with regex ${Route.pattern}"))
-        }
+      Uri.fromString(text).left.map { failure => CannotConvert(text, classOf[Uri].getSimpleName, failure.details) }
     }
 }

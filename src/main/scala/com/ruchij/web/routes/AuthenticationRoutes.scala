@@ -18,6 +18,8 @@ object AuthenticationRoutes {
     import dsl._
 
     HttpRoutes.of {
+      case GET -> Root => ???
+
       case request @ POST -> Root =>
         for {
           loginRequest <- request.as[LoginRequest]
