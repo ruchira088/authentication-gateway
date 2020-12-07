@@ -38,6 +38,7 @@ object App extends IOApp {
     for {
       client <- BlazeClientBuilder[F](executionContext).resource
       cpuBlocker <- Blocker[F]
+      ioBlocker <- Blocker[F]
 
       healthService = new HealthServiceImpl[F](serviceConfiguration.buildInformation)
       hashingService = new MurmurHash3Service[F]
@@ -48,5 +49,5 @@ object App extends IOApp {
         cpuBlocker
       )
 
-    } yield Routes(proxyService, authenticationService, healthService)
+    } yield Routes(proxyService, authenticationService, healthService, ioBlocker)
 }

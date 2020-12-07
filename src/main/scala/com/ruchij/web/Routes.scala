@@ -1,6 +1,6 @@
 package com.ruchij.web
 
-import cats.effect.Sync
+import cats.effect.{Blocker, ContextShift, Sync}
 import cats.implicits._
 import com.ruchij.services.authentication.AuthenticationService
 import com.ruchij.services.health.HealthService
@@ -12,20 +12,20 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
 
 object Routes {
-  def apply[F[_]: Sync](
+  def apply[F[_]: Sync: ContextShift](
     proxyService: ProxyService[F],
     authenticationService: AuthenticationService[F],
-    healthService: HealthService[F]
+    healthService: HealthService[F],
+    ioBlocker: Blocker
   ): HttpApp[F] = {
     implicit val dsl: Http4sDsl[F] = new Http4sDsl[F] {}
 
     val routes: HttpRoutes[F] =
       Router(
         "/health" -> HealthRoutes[F](healthService),
-        "/authenticate" -> AuthenticationRoutes[F](authenticationService)
+        "/authenticate" -> AuthenticationRoutes[F](authenticationService, ioBlocker)
       ) <+>
-        ProxyRoutes(proxyService)
-//        Authenticator[F](authenticationService)(ProxyRoutes(proxyService))
+        Authenticator[F](authenticationService)(ProxyRoutes(proxyService))
 
     ExceptionHandler {
       NotFoundHandler(routes)

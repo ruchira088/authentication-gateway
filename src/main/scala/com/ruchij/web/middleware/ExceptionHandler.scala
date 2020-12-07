@@ -4,10 +4,12 @@ import cats.arrow.FunctionK
 import cats.data.Kleisli
 import cats.effect.Sync
 import cats.implicits._
-import com.ruchij.exceptions.ResourceNotFoundException
+import com.ruchij.exceptions.{AuthenticationException, ResourceNotFoundException}
 import com.ruchij.types.FunctionKTypes
 import com.ruchij.web.responses.ErrorResponse
 import org.http4s.dsl.impl.EntityResponseGenerator
+import org.http4s.headers.Location
+import org.http4s.implicits.http4sLiteralsSyntax
 import org.http4s.{HttpApp, Request, Response, Status}
 
 object ExceptionHandler {
@@ -22,6 +24,8 @@ object ExceptionHandler {
   val throwableStatusMapper: Throwable => Status = {
     case _: ResourceNotFoundException => Status.NotFound
 
+    case _: AuthenticationException => Status.Unauthorized
+
     case _ => Status.InternalServerError
   }
 
@@ -29,6 +33,11 @@ object ExceptionHandler {
 
   def errorResponseMapper[F[_]](throwable: Throwable)(response: Response[F]): Response[F] =
     throwable match {
+      case _: AuthenticationException =>
+        Response[F]()
+          .withStatus(Status.TemporaryRedirect)
+          .withHeaders(Location(uri"/authenticate"))
+
       case _ => response
     }
 

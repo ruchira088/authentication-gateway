@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Page</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 98vh;
+            background-image: url("/authenticate/background.jpg");
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-form">
+        <div>
+            <label for="password">
+                Password
+            </label>
+            <input id="password"/>
+        </div>
+        <div>
+            <button id="login-button" onclick="onClick()">
+                Login
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const onClick = () => {
+            const password = document.getElementById("password").value
+
+            fetch(
+                "/authenticate",
+                {
+                    method: "POST",
+                    body: JSON.stringify({ secret: password }),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            )
+                .then(response => {
+                    console.log(response.status)
+                })
+        }
+    </script>
+</body>
+</html>
