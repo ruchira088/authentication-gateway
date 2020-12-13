@@ -1,10 +1,10 @@
 package com.ruchij.services.authentication
 
-import cats.{Applicative, ApplicativeError}
 import cats.effect.{Blocker, Clock, ContextShift, Sync}
 import cats.implicits._
+import cats.{Applicative, ApplicativeError}
 import com.ruchij.config.AuthenticationConfiguration
-import com.ruchij.exceptions.AuthenticationException
+import com.ruchij.exceptions.IncorrectPasswordException
 import com.ruchij.services.authentication.AuthenticationService.Token
 import com.ruchij.services.hashing.HashingService
 import org.joda.time.DateTime
@@ -43,7 +43,7 @@ class AuthenticationServiceImpl[F[_]: Sync: ContextShift: Clock](
       }
       .flatMap { isSuccess =>
         if (isSuccess) currentToken
-        else ApplicativeError[F, Throwable].raiseError(AuthenticationException("Invalid authentication secret"))
+        else ApplicativeError[F, Throwable].raiseError(IncorrectPasswordException)
       }
 
   override def isAuthenticated(token: AuthenticationService.Token): F[Boolean] =

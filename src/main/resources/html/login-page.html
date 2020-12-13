@@ -3,31 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <title>Login Page</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
     <style>
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
-            height: 98vh;
+            height: 100vh;
+            width: 100vw;
+            font-family: "Roboto", sans-serif;
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        #left-column {
             background-image: url("/authenticate/background.jpg");
             background-size: cover;
             background-position: center;
+            width: 50%;
+            height: 100vh;
+        }
+
+        #right-column {
+            width: 50%;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5em;
+        }
+
+        #password {
+            font-size: 1em;
+            min-width: 15em;
+        }
+
+        #login-button {
+            margin-top: 3em;
+            font-size: 0.8em;
+            padding: 0.4em;
+            width: 5em;
+        }
+
+        #error-message {
+            position: absolute;
+            color: red;
+            font-size: 0.8em;
+            width: 100%;
+        }
+
+        #login-form {
+            position: relative;
         }
     </style>
 </head>
 <body>
-    <div class="login-form">
-        <div>
-            <label for="password">
-                Password
-            </label>
-            <input id="password"/>
-        </div>
-        <div>
-            <button id="login-button" onclick="onClick()">
-                Login
-            </button>
+    <div id="left-column">
+    </div>
+    <div id="right-column">
+        <div id="login-form">
+            <div class="password-field">
+                <label for="password">
+                    Password
+                </label>
+                <input id="password"/>
+            </div>
+            <div id="error-message">
+            </div>
+            <div class="form-controls">
+                <button id="login-button" onclick="onClick()">
+                    Login
+                </button>
+            </div>
         </div>
     </div>
 
@@ -36,7 +85,7 @@
             const password = document.getElementById("password").value
 
             fetch(
-                "/authenticate",
+                `/authenticate`,
                 {
                     method: "POST",
                     body: JSON.stringify({ secret: password }),
@@ -46,8 +95,24 @@
                 }
             )
                 .then(response => {
-                    console.log(response.status)
+                    if (response.ok) {
+                        const queryParams = new URLSearchParams(window.location.search)
+                        const redirectUrl = queryParams.get("redirect-url") || ""
+
+                        window.location.replace(redirectUrl)
+                    } else {
+                        response.json()
+                            .then(({ errorMessages }) => setErrorMessage(errorMessages.join("\n")))
+                    }
                 })
+                .catch(setErrorMessage)
+        }
+
+        document.getElementById("password")
+            .addEventListener("keypress", () => setErrorMessage(""))
+
+        const setErrorMessage = errors => {
+            document.getElementById("error-message").innerText = errors
         }
     </script>
 </body>

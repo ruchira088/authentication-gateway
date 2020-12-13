@@ -8,11 +8,11 @@ import com.ruchij.services.authentication.AuthenticationService.Secret
 import com.ruchij.web.middleware.Authenticator
 import com.ruchij.web.requests.LoginRequest
 import com.ruchij.web.responses.AuthenticationTokenResponse
-import org.http4s.{HttpRoutes, ResponseCookie, StaticFile}
+import io.circe.generic.auto._
 import org.http4s.circe.CirceEntityDecoder.circeEntityDecoder
 import org.http4s.circe.CirceEntityEncoder.circeEntityEncoder
-import io.circe.generic.auto._
 import org.http4s.dsl.Http4sDsl
+import org.http4s.{HttpRoutes, ResponseCookie, StaticFile}
 
 object AuthenticationRoutes {
   def apply[F[_]: Sync: ContextShift](authenticationService: AuthenticationService[F], ioBlocker: Blocker)(
