@@ -24,3 +24,9 @@
   shell: |
     docker tag http-auth:{{ git_branch }}-{{ git_commit }} ruchira088/http-auth:{{ git_branch }}-{{ git_commit }} && \
     docker push ruchira088/http-auth:{{ git_branch }}-{{ git_commit }}
+
+- name: Publish latest production Docker image
+  shell: |
+    docker tag http-auth:{{ git_branch }}-{{ git_commit }} ruchira088/http-auth:latest && \
+    docker push ruchira088/http-auth:latest
+  when: git_branch == "master"

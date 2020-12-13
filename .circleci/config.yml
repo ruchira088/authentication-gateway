@@ -76,8 +76,8 @@ workflows:
   http-auth:
     jobs:
       - build-and-test:
-        post-steps:
-          - slack/status
+          post-steps:
+            - slack/status
 
       - build-and-publish-docker-image:
           context: aws-credentials
