@@ -42,7 +42,7 @@ lazy val rootDependencies =
   )
 
 lazy val rootTestDependencies =
-  Seq(scalaTest, pegdown)
+  Seq(scalaTest, scalaMock, pegdown)
 
 addCommandAlias("testWithCoverage", "; coverage; test; coverageReport")
 

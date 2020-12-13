@@ -1,10 +1,10 @@
 package com.ruchij.test.utils
 
-import java.util.concurrent.TimeUnit
-
-import cats.effect.{Clock, Sync}
+import cats.effect.{Clock, ContextShift, IO, Sync}
 import org.joda.time.DateTime
 
+import java.util.concurrent.TimeUnit
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.TimeUnit
 import scala.language.implicitConversions
 
@@ -17,4 +17,7 @@ object Providers {
 
     override def monotonic(unit: TimeUnit): F[Long] = realTime(unit)
   }
+
+  implicit def contextShift(implicit executionContext: ExecutionContext): ContextShift[IO] =
+    IO.contextShift(executionContext)
 }
