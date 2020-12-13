@@ -40,7 +40,7 @@ object App extends IOApp {
       cpuBlocker <- Blocker[F]
       ioBlocker <- Blocker[F]
 
-      healthService = new HealthServiceImpl[F](serviceConfiguration.buildInformation)
+      healthService = new HealthServiceImpl[F](serviceConfiguration.buildInformation, serviceConfiguration.proxyConfiguration)
       hashingService = new MurmurHash3Service[F]
       proxyService = new ProxyServiceImpl[F](client, serviceConfiguration.proxyConfiguration)
       authenticationService = new AuthenticationServiceImpl[F](
