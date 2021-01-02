@@ -48,7 +48,7 @@ class HealthRoutesSpec extends AnyFlatSpec with Matchers with MockFactory {
         "serviceVersion": ${BuildInfo.version},
         "organization": "com.ruchij",
         "scalaVersion": "2.13.4",
-        "sbtVersion": "1.4.4",
+        "sbtVersion": "1.4.6",
         "gitBranch" : "test-branch",
         "gitCommit" : "my-commit",
         "javaVersion": ${Properties.javaVersion},

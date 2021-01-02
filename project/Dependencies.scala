@@ -3,7 +3,7 @@ import sbt._
 object Dependencies
 {
   val ScalaVersion = "2.13.4"
-  val Http4sVersion = "0.21.14"
+  val Http4sVersion = "0.21.15"
   val CirceVersion = "0.13.0"
 
   lazy val http4sDsl = "org.http4s" %% "http4s-dsl" % Http4sVersion
@@ -20,7 +20,7 @@ object Dependencies
 
   lazy val circeLiteral = "io.circe" %% "circe-literal" % CirceVersion
 
-  lazy val jodaTime = "joda-time" % "joda-time" % "2.10.8"
+  lazy val jodaTime = "joda-time" % "joda-time" % "2.10.9"
 
   lazy val jbcrypt = "org.mindrot" % "jbcrypt" % "0.4"
 
