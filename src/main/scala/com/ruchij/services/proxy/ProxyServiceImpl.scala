@@ -19,7 +19,7 @@ class ProxyServiceImpl[F[_]: Sync](client: Client[F], override val configuration
             Uri(
               configuration.destination.scheme,
               configuration.destination.authority,
-              configuration.destination.path + request.uri.path,
+              configuration.destination.path.concat(request.uri.path),
               request.uri.query,
               request.uri.fragment
             ),

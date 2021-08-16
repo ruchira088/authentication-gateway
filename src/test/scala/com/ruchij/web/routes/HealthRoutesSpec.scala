@@ -1,65 +1,71 @@
 package com.ruchij.web.routes
 
-import cats.data.OptionT
-import cats.effect.{Clock, IO}
-import com.eed3si9n.ruchij.BuildInfo
-import com.ruchij.circe.Encoders.dateTimeEncoder
-import com.ruchij.config.ProxyConfiguration
-import com.ruchij.services.authentication.AuthenticationService
-import com.ruchij.services.proxy.ProxyService
-import com.ruchij.test.HttpTestApp
-import com.ruchij.test.utils.Providers.{contextShift, stubClock}
+import cats.effect.IO
+import com.ruchij.services.health.models.ServiceInformation
 import com.ruchij.test.matchers._
+import com.ruchij.test.mixins.io.MockedRoutesIO
+import com.ruchij.test.utils.IOUtils.runIO
 import io.circe.literal._
+import org.http4s.Method.GET
+import org.http4s.Status
+import org.http4s.client.dsl.io._
 import org.http4s.implicits.http4sLiteralsSyntax
-import org.http4s.{Request, Response, Status, Uri}
-import org.joda.time.DateTime
-import org.scalamock.scalatest.MockFactory
+import org.joda.time.{DateTime, DateTimeZone}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Properties
+class HealthRoutesSpec extends AnyFlatSpec with MockedRoutesIO with Matchers {
 
-class HealthRoutesSpec extends AnyFlatSpec with Matchers with MockFactory {
-
-  "GET /service" should "return a successful response containing service information" in {
-    val dateTime = DateTime.now()
-    implicit val clock: Clock[IO] = stubClock[IO](dateTime)
-
-    val proxyService: ProxyService[IO] = new ProxyService[IO] {
-      override val configuration: ProxyConfiguration = ProxyConfiguration(uri"https://httpbin.org")
-
-      override def route(request: Request[IO]): OptionT[IO, Response[IO]] = OptionT.none
-    }
-
-    val authenticationService: AuthenticationService[IO] = mock[AuthenticationService[IO]]
-
-    val application = HttpTestApp[IO](proxyService, authenticationService)
-
-    val request = Request[IO](uri = Uri(path = "/health"))
-
-    val response = application.run(request).unsafeRunSync()
+  "GET /service" should "return a successful response containing service information" in runIO {
 
     val expectedJsonResponse =
       json"""{
-        "proxyUrl": ${proxyService.configuration.destination.renderString},
+        "proxyUrl": "https://httpbin.org",
         "serviceName": "http-auth",
-        "serviceVersion": ${BuildInfo.version},
+        "serviceVersion": "1.0.0",
         "organization": "com.ruchij",
-        "scalaVersion": "2.13.4",
-        "sbtVersion": "1.4.6",
+        "scalaVersion": "2.13.6",
+        "sbtVersion": "1.5.5",
         "gitBranch" : "test-branch",
         "gitCommit" : "my-commit",
-        "javaVersion": ${Properties.javaVersion},
+        "javaVersion": "11.0.12",
         "gitBranch" : "test-branch",
         "gitCommit" : "my-commit",
         "buildTimestamp" : null,
-        "timestamp": $dateTime
+        "timestamp": "2021-08-16T22:24:40.000Z"
       }"""
 
-    response must beJsonContentType
-    response must haveJson(expectedJsonResponse)
-    response must haveStatus(Status.Ok)
+    for {
+      _ <- IO.delay {
+        (() => healthService.serviceInformation()).expects().returns {
+          IO.pure {
+            ServiceInformation(
+              uri"https://httpbin.org",
+              "http-auth",
+              "1.0.0",
+              "com.ruchij",
+              "2.13.6",
+              "1.5.5",
+              "11.0.12",
+              Some("test-branch"),
+              Some("my-commit"),
+              None,
+              new DateTime(2021, 8, 16, 22, 24, 40, 0).withZoneRetainFields(DateTimeZone.UTC)
+            )
+          }
+        }
+      }
+
+      routes <- createRoutes()
+
+      response <- routes.run(GET(uri"/health"))
+
+      _ <- IO.delay {
+        response must beJsonContentType
+        response must haveJson(expectedJsonResponse)
+        response must haveStatus(Status.Ok)
+      }
+    }
+    yield (): Unit
   }
 }

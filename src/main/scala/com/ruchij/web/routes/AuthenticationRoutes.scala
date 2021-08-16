@@ -1,7 +1,7 @@
 package com.ruchij.web.routes
 
 import cats.data.OptionT
-import cats.effect.{Blocker, ContextShift, Sync}
+import cats.effect.Async
 import cats.implicits._
 import com.ruchij.services.authentication.AuthenticationService
 import com.ruchij.services.authentication.AuthenticationService.Secret
@@ -15,17 +15,17 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.{HttpRoutes, ResponseCookie, StaticFile}
 
 object AuthenticationRoutes {
-  def apply[F[_]: Sync: ContextShift](authenticationService: AuthenticationService[F], ioBlocker: Blocker)(
+  def apply[F[_]: Async](authenticationService: AuthenticationService[F])(
     implicit dsl: Http4sDsl[F]
   ): HttpRoutes[F] = {
     import dsl._
 
     HttpRoutes {
       case request @ GET -> Root =>
-        StaticFile.fromResource("html/login-page.html", ioBlocker, Some(request))
+        StaticFile.fromResource("html/login-page.html", Some(request))
 
       case request @ GET -> Root / "background.jpg" =>
-        StaticFile.fromResource("images/background.jpg", ioBlocker, Some(request))
+        StaticFile.fromResource("images/background.jpg", Some(request))
 
       case request @ POST -> Root =>
         OptionT.liftF {

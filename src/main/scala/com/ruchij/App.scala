@@ -1,6 +1,6 @@
 package com.ruchij
 
-import cats.effect.{Blocker, Clock, ConcurrentEffect, ContextShift, ExitCode, IO, IOApp, Resource}
+import cats.effect._
 import com.ruchij.config.ServiceConfiguration
 import com.ruchij.services.authentication.AuthenticationServiceImpl
 import com.ruchij.services.hashing.MurmurHash3Service
@@ -8,8 +8,8 @@ import com.ruchij.services.health.HealthServiceImpl
 import com.ruchij.services.proxy.ProxyServiceImpl
 import com.ruchij.web.Routes
 import org.http4s.HttpApp
-import org.http4s.client.blaze.BlazeClientBuilder
-import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.blaze.client.BlazeClientBuilder
+import org.http4s.blaze.server.BlazeServerBuilder
 import pureconfig.ConfigSource
 
 import scala.concurrent.ExecutionContext
@@ -31,23 +31,20 @@ object App extends IOApp {
       }
     } yield ExitCode.Success
 
-  def httpApp[F[_]: ConcurrentEffect: Clock: ContextShift](
+  def httpApp[F[_]: Async: Clock](
     serviceConfiguration: ServiceConfiguration,
     executionContext: ExecutionContext
   ): Resource[F, HttpApp[F]] =
     for {
       client <- BlazeClientBuilder[F](executionContext).resource
-      cpuBlocker <- Blocker[F]
-      ioBlocker <- Blocker[F]
 
       healthService = new HealthServiceImpl[F](serviceConfiguration.buildInformation, serviceConfiguration.proxyConfiguration)
       hashingService = new MurmurHash3Service[F]
       proxyService = new ProxyServiceImpl[F](client, serviceConfiguration.proxyConfiguration)
       authenticationService = new AuthenticationServiceImpl[F](
         hashingService,
-        serviceConfiguration.authenticationConfiguration,
-        cpuBlocker
+        serviceConfiguration.authenticationConfiguration
       )
 
-    } yield Routes(proxyService, authenticationService, healthService, ioBlocker)
+    } yield Routes(proxyService, authenticationService, healthService)
 }

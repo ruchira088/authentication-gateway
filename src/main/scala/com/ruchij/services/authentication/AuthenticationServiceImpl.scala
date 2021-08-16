@@ -1,6 +1,6 @@
 package com.ruchij.services.authentication
 
-import cats.effect.{Blocker, Clock, ContextShift, Sync}
+import cats.effect.{Async, Clock, Sync}
 import cats.implicits._
 import cats.{Applicative, ApplicativeError}
 import com.ruchij.config.AuthenticationConfiguration
@@ -10,20 +10,16 @@ import com.ruchij.services.hashing.HashingService
 import org.joda.time.DateTime
 import org.mindrot.jbcrypt.BCrypt
 
-import java.util.concurrent.TimeUnit
-
-class AuthenticationServiceImpl[F[_]: Sync: ContextShift: Clock](
+class AuthenticationServiceImpl[F[_]: Async](
   hashingService: HashingService[F],
-  authenticationConfiguration: AuthenticationConfiguration,
-  blocker: Blocker
+  authenticationConfiguration: AuthenticationConfiguration
 ) extends AuthenticationService[F] {
 
   val currentToken: F[Token] =
-    Clock[F]
-      .realTime(TimeUnit.MILLISECONDS)
-      .map(timestamp => new DateTime(timestamp))
+    Clock[F].realTimeInstant
+      .map(instant => new DateTime(instant.getEpochSecond))
       .flatMap { dateTime =>
-        blocker.blockOn {
+        Sync[F].defer {
           repeatHash(10, 20, dateTime.toLocalDate.toString + authenticationConfiguration.saltedHash)
         }
       }
@@ -37,7 +33,7 @@ class AuthenticationServiceImpl[F[_]: Sync: ContextShift: Clock](
       hashingService.hash(value).flatMap(hashedValue => repeatHash(count - 1, maxLength, hashedValue.take(maxLength)))
 
   override def authenticate(secret: AuthenticationService.Secret): F[AuthenticationService.Token] =
-    blocker
+    Sync[F]
       .delay {
         BCrypt.checkpw(secret.value, authenticationConfiguration.saltedHash)
       }
